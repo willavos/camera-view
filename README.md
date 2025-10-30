@@ -21,6 +21,9 @@
 - `cameraview.html?video=ospreys&mute=0`
 - `cameraview.html?code=K380RGUXHsw&mute=1`
 
+## Using this quickly
+GitHub pages are turned on for this repo, so just hit this URL: `https://willavos.github.io/camera-view/cameraview.html`
+
 ## Notes:
   Autoplay with sound can be blocked by browser policies; keep mute=1 for reliable autoplay.
   If you need sound immediately, user must interact (click/tap) before unmuting via the YouTube IFrame API.
