@@ -7,7 +7,8 @@
 \____/\__,_|_| |_| |_|\___|_|  \__,_|   \_/ |_|\___| \_/\_/
 
 
-Auto-cycle videos from a predefined list.
+Auto-cycle videos from a predefined list (config.json).
+If the config.json file changes the page will reload to grab the new videos.
 -->
 
 <html lang="en">
@@ -68,29 +69,39 @@ Auto-cycle videos from a predefined list.
         }
       }
 
-      const config = fetch(configLocation).then((r) => r.json());
-      const initialConfigHash = getConfigHash();
+      async function main() {
+        const config = await fetch(configLocation).then((r) => r.json());
+        const initialConfigHash = await getConfigHash();
+        shuffle(config.videos);
 
-      // Shuffle the videos array
-      shuffle(config.videos);
+        // Config has the video name, code and duration to be played.
+        // Loop through the array of videos and play them one after the other waiting for each to finish.
+        while (true) {
+          for (const video of config.videos) {
+            const name = video.name;
+            const code = video.youtube_id;
+            const duration = video.run_time; // Duration in minutes
 
-      // Config has the video name, code and duration to be played.
-      // Loop through the array of videos and play them one after the other waiting for each to finish.
-      config.videos.forEach((video) => {
-        const name = video.name;
-        const code = video.code;
-        const duration = video.run_time; // Duration in minutes
+            const base = "https://www.youtube-nocookie.com/embed/";
+            const query = `?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1&vq=hd1080`;
+            const vidSrc = base + code + query;
+            document.getElementById("vidFrame").src = vidSrc;
 
-        const base = "https://www.youtube-nocookie.com/embed/";
-        const query = `?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1&vq=hd1080`;
-        document.getElementById("vidFrame").src = base + code + query;
-        setTimeout(
-          () => {
-            document.getElementById("vidFrame").src = "";
-          },
-          duration * 60 * 1000,
-        );
-      });
+            console.log("Set src to", vidSrc);
+            await new Promise((resolve) =>
+              setTimeout(resolve, duration * 60 * 1000),
+            );
+
+            const newConfigHash = await getConfigHash();
+            if (newConfigHash !== initialConfigHash) {
+              console.log("Config hash has changed, reloading page...");
+              location.reload(); // Refresh the page
+            }
+          }
+        }
+      }
+
+      main();
     </script>
   </body>
 </html>
