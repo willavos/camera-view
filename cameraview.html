@@ -50,6 +50,14 @@ Notes:
         height: 100vh;
         border: 0;
       }
+      .video-info {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        color: #fff;
+        font-size: 14px;
+        text-shadow: 0 0 10px black;
+      }
     </style>
   </head>
   <body>
@@ -61,6 +69,7 @@ Notes:
       referrerpolicy="strict-origin-when-cross-origin"
     >
     </iframe>
+    <div class="video-info" id="infobox"></div>
     <script>
       const configLocation = "config.json"; // Local file, adjust if needed
       const params = new URLSearchParams(location.search);
@@ -73,6 +82,12 @@ Notes:
         return await fetch(configLocation, { cache: "no-store" }).then((r) =>
           r.json(),
         );
+      }
+
+      function updateInfoBox(video) {
+        const infoBox = document.getElementById("infobox");
+        const location = video.location || "Unknown";
+        infoBox.innerHTML = "<tt>" + video.name + "</tt>" + ":  " + location;
       }
 
       function isActiveNow(active_hours) {
@@ -156,19 +171,24 @@ Notes:
         const initialConfigHash = await getConfigHash();
         shuffle(config.videos);
 
+        // Quick check for config updates
+        setInterval(async () => {
+          const newConfigHash = await getConfigHash();
+          if (newConfigHash !== initialConfigHash) {
+            window.location.reload();
+          }
+        }, 1000 * 60);
+
         while (true) {
           for (const video of config.videos) {
             if (!isActiveNow(video.active_hours)) continue;
+            updateInfoBox(video);
             const code = video.youtube_id;
             const duration = video.run_time;
             document.getElementById("vidFrame").src = base + code + query(1);
             await new Promise((resolve) =>
               setTimeout(resolve, duration * 60 * 1000),
             );
-            const newConfigHash = await getConfigHash();
-            if (newConfigHash !== initialConfigHash) {
-              window.location.reload();
-            }
           }
         }
       }

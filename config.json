@@ -21,12 +21,6 @@
       "location": "Utopia Village, Utila, Honduras"
     },
     {
-      "name": "osprey",
-      "youtube_id": "K380RGUXHsw",
-      "run_time": 5,
-      "location": "Hog Island, Maine, USA"
-    },
-    {
       "name": "jelly",
       "youtube_id": "1rvCfsW_qTA",
       "run_time": 5
@@ -77,6 +71,14 @@
         "end": "18:00"
       },
       "location": "Anton Valley, Panama"
+    }
+  ],
+  "inactive": [
+    {
+      "name": "osprey",
+      "youtube_id": "K380RGUXHsw",
+      "run_time": 5,
+      "location": "Hog Island, Maine, USA"
     }
   ]
 }
