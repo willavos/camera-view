@@ -75,6 +75,25 @@ Notes:
         );
       }
 
+      function isActiveNow(active_hours) {
+        if (!active_hours) return true; // If not set, always active
+        const now = new Date();
+        const [startH, startM] = active_hours.start.split(":").map(Number);
+        const [endH, endM] = active_hours.end.split(":").map(Number);
+
+        const start = new Date(now);
+        start.setHours(startH, startM, 0, 0);
+        const end = new Date(now);
+        end.setHours(endH, endM, 0, 0);
+
+        // Handle overnight windows (e.g. 22:00-06:00)
+        if (end <= start) {
+          return now >= start || now <= end;
+        } else {
+          return now >= start && now <= end;
+        }
+      }
+
       async function getConfigHash() {
         const configText = await fetch(configLocation, {
           cache: "no-store",
@@ -139,6 +158,7 @@ Notes:
 
         while (true) {
           for (const video of config.videos) {
+            if (!isActiveNow(video.active_hours)) continue;
             const code = video.youtube_id;
             const duration = video.run_time;
             document.getElementById("vidFrame").src = base + code + query(1);

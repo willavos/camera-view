@@ -3,12 +3,20 @@
     {
       "name": "sheep",
       "youtube_id": "SnHke968zAA",
-      "run_time": 15
+      "run_time": 1,
+      "active_hours": {
+        "start": "14:00",
+        "end": "22:00"
+      }
     },
     {
       "name": "reef",
       "youtube_id": "1zcIUk66HX4",
-      "run_time": 15
+      "run_time": 15,
+      "active_hours": {
+        "start": "12:00",
+        "end": "23:00"
+      }
     },
     {
       "name": "osprey",
