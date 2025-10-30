@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <!--
    ___                                       _
   / __\__ _ _ __ ___   ___ _ __ __ _  /\   /(_) _____      __
@@ -8,10 +8,13 @@
 
 
 Usage:
-  Append URL parameters to control the embedded video.
+  - Loads video definitions from config.json.
+  - Append URL parameters to control the embedded video.
+  - If URL parameters are present, plays a single video (see below).
+  - If no parameters, cycles through all videos in config.json.
 
 Parameters:
-  ?video=sheep|reef|ospreys|jellyfish|fish|eagles|africa
+  ?video=sheep|reef|ospreys|jellyfish|fish|eagles|africa   (see config.json for available videos)
       Select a predefined video by name.
   ?code=<YouTubeVideoId>
       Override the video with any valid YouTube ID (takes precedence over ?video).
@@ -29,56 +32,135 @@ Notes:
 -->
 
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Embedded Video</title>
-  <meta name="referrer" content="strict-origin-when-cross-origin">
-  <style>
-    html,body { margin:0; height:100%; background:#000; }
-    iframe { position:fixed; inset:0; width:100vw; height:100vh; border:0; }
-  </style>
-</head>
-<body>
-  <iframe
-    id="vidFrame"
-    title="Video"
-    allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-    allowfullscreen
-    referrerpolicy="strict-origin-when-cross-origin">
-  </iframe>
-  <script>
-    const params = new URLSearchParams(location.search);
-    const name = (params.get('video') || '').toLowerCase();
-    const overrideCode = params.get('code');
-    const muteParam = (params.get('mute') || '1').toLowerCase();
-    const mute = (muteParam === '0' || muteParam === 'false') ? 0 : 1;
+  <head>
+    <meta charset="utf-8" />
+    <title>Embedded Video</title>
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #000;
+      }
+      iframe {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <iframe
+      id="vidFrame"
+      title="Video"
+      allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+      allowfullscreen
+      referrerpolicy="strict-origin-when-cross-origin"
+    >
+    </iframe>
+    <script>
+      const configLocation = "config.json"; // Local file, adjust if needed
+      const params = new URLSearchParams(location.search);
+      const hasParams = params.has("video") || params.has("code");
+      const muteParam = (params.get("mute") || "1").toLowerCase();
+      const mute = muteParam === "0" || muteParam === "false" ? 0 : 1;
+      const ytIdPattern = /^[A-Za-z0-9_-]{6,}$/;
 
-    const map = {
-      sheep:     'SnHke968zAA',
-      reef:      '1zcIUk66HX4',
-      ospreys:   'K380RGUXHsw',
-      jellyfish: '1rvCfsW_qTA',
-      fish:      'DHUnz4dyb54',
-      eagles:    '8bMrSm0Ap20',
-      africa:    'DsNtwGJXTTs'
-    };
+      async function getConfig() {
+        return await fetch(configLocation, { cache: "no-store" }).then((r) =>
+          r.json(),
+        );
+      }
 
-    const ytIdPattern = /^[A-Za-z0-9_-]{6,}$/;
-    let code = map[name] || map.sheep;
-    if (overrideCode && ytIdPattern.test(overrideCode)) code = overrideCode;
+      async function getConfigHash() {
+        const configText = await fetch(configLocation, {
+          cache: "no-store",
+        }).then((r) => r.text());
+        const hashBuffer = await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(configText),
+        );
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
 
-    const base = 'https://www.youtube-nocookie.com/embed/';
-    // Order of params not important
-    const query = `?autoplay=1&mute=${mute}&controls=0&rel=0&modestbranding=1&playsinline=1&vq=hd1080`;
-    document.getElementById('vidFrame').src = base + code + query;
+      function shuffle(array) {
+        let currentIndex = array.length;
+        while (currentIndex != 0) {
+          let randomIndex = Math.floor(Math.random() * currentIndex);
+          currentIndex--;
+          [array[currentIndex], array[randomIndex]] = [
+            array[randomIndex],
+            array[currentIndex],
+          ];
+        }
+      }
 
-    // If unmuted, browsers may block autoplay; optionally prompt user.
-    if (mute === 0) {
-      document.addEventListener('click', () => {
-        const f = document.getElementById('vidFrame');
-        f.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-      }, { once: true });
-    }
-  </script>
-</body>
+      const base = "https://www.youtube-nocookie.com/embed/";
+      const query = (mute) => {
+        return `?autoplay=1&mute=${mute}&controls=0&rel=0&modestbranding=1&playsinline=1&vq=hd1080`;
+      };
+
+      async function playSingleVideo(config) {
+        const name = (params.get("video") || "").toLowerCase();
+        const overrideCode = params.get("code");
+        // Build map from config
+        const map = {};
+        for (const v of config.videos) {
+          map[v.name.toLowerCase()] = v.youtube_id;
+        }
+        // Default to first video if not found
+        let code = map[name] || config.videos[0].youtube_id;
+        if (overrideCode && ytIdPattern.test(overrideCode)) code = overrideCode;
+
+        document.getElementById("vidFrame").src = base + code + query(mute);
+
+        if (mute === 0) {
+          document.addEventListener(
+            "click",
+            () => {
+              const f = document.getElementById("vidFrame");
+              f.contentWindow?.postMessage(
+                '{"event":"command","func":"unMute","args":""}',
+                "*",
+              );
+            },
+            { once: true },
+          );
+        }
+      }
+
+      async function playCycle(config) {
+        const initialConfigHash = await getConfigHash();
+        shuffle(config.videos);
+
+        while (true) {
+          for (const video of config.videos) {
+            const code = video.youtube_id;
+            const duration = video.run_time;
+            document.getElementById("vidFrame").src = base + code + query(1);
+            await new Promise((resolve) =>
+              setTimeout(resolve, duration * 60 * 1000),
+            );
+            const newConfigHash = await getConfigHash();
+            if (newConfigHash == initialConfigHash) {
+              window.location.reload();
+            }
+          }
+        }
+      }
+
+      // Main entry
+      getConfig().then((config) => {
+        if (hasParams) {
+          playSingleVideo(config);
+        } else {
+          playCycle(config);
+        }
+      });
+    </script>
+  </body>
 </html>
