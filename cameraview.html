@@ -166,7 +166,7 @@ Notes:
               setTimeout(resolve, duration * 60 * 1000),
             );
             const newConfigHash = await getConfigHash();
-            if (newConfigHash == initialConfigHash) {
+            if (newConfigHash !== initialConfigHash) {
               window.location.reload();
             }
           }
