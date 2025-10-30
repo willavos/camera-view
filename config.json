@@ -1,37 +1,39 @@
-[
-  {
-    "name": "sheep",
-    "youtube_id": "SnHke968zAA",
-    "run_time": 15
-  },
-  {
-    "name": "reef",
-    "youtube_id": "1zcIUk66HX4",
-    "run_time": 15
-  },
-  {
-    "name": "osprey",
-    "youtube_id": "K380RGUXHsw",
-    "run_time": 5
-  },
-  {
-    "name": "jelly",
-    "youtube_id": "1rvCfsW_qTA",
-    "run_time": 5
-  },
-  {
-    "name": "fish",
-    "youtube_id": "DHUnz4dyb54",
-    "run_time": 10
-  },
-  {
-    "name": "eagle",
-    "youtube_id": "8bMrSm0Ap20",
-    "run_time": 5
-  },
-  {
-    "name": "africa",
-    "youtube_id": "DsNtwGJXTTs",
-    "run_time": 20
-  }
-]
+{
+  "videos": [
+    {
+      "name": "sheep",
+      "youtube_id": "SnHke968zAA",
+      "run_time": 15
+    },
+    {
+      "name": "reef",
+      "youtube_id": "1zcIUk66HX4",
+      "run_time": 15
+    },
+    {
+      "name": "osprey",
+      "youtube_id": "K380RGUXHsw",
+      "run_time": 5
+    },
+    {
+      "name": "jelly",
+      "youtube_id": "1rvCfsW_qTA",
+      "run_time": 5
+    },
+    {
+      "name": "fish",
+      "youtube_id": "DHUnz4dyb54",
+      "run_time": 10
+    },
+    {
+      "name": "eagle",
+      "youtube_id": "8bMrSm0Ap20",
+      "run_time": 5
+    },
+    {
+      "name": "africa",
+      "youtube_id": "DsNtwGJXTTs",
+      "run_time": 20
+    }
+  ]
+}

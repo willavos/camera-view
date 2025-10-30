@@ -7,25 +7,7 @@
 \____/\__,_|_| |_| |_|\___|_|  \__,_|   \_/ |_|\___| \_/\_/
 
 
-Usage:
-  Append URL parameters to control the embedded video.
-
-Parameters:
-  ?video=sheep|reef|ospreys|jellyfish|fish|eagles|africa
-      Select a predefined video by name.
-  ?code=<YouTubeVideoId>
-      Override the video with any valid YouTube ID (takes precedence over ?video).
-  ?mute=1|0
-      1 (default) mutes to allow autoplay; 0 requests sound (autoplay may be blocked until user interacts).
-
-Examples:
-  page.html?video=reef
-  page.html?video=ospreys&mute=0
-  page.html?code=K380RGUXHsw&mute=1
-
-Notes:
-  Autoplay with sound can be blocked by browser policies; keep mute=1 for reliable autoplay.
-  If you need sound immediately, user must interact (click/tap) before unmuting via the YouTube IFrame API.
+Auto-cycle videos from a predefined list.
 -->
 
 <html lang="en">
@@ -62,14 +44,35 @@ Notes:
       const configLocation =
         "https://willavos.github.io/camera-view/config.json";
 
+      async function getConfigHash() {
+        const configText = await fetch(configLocation, {
+          cache: "no-store",
+        }).then((r) => r.text());
+        const hashBuffer = await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(configText),
+        );
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
 
-      var config = await fetch(configLocation).then((r) => r.json());
+      function shuffle(array) {
+        let currentIndex = array.length;
+        while (currentIndex != 0) {
+          let randomIndex = Math.floor(Math.random() * currentIndex);
+          currentIndex--;
+          [array[currentIndex], array[randomIndex]] = [
+            array[randomIndex],
+            array[currentIndex],
+          ];
+        }
+      }
 
+      const config = fetch(configLocation).then((r) => r.json());
+      const initialConfigHash = getConfigHash();
 
-      const base = "https://www.youtube-nocookie.com/embed/";
-      // Order of params not important
-      const query = `?autoplay=1&mute=1}&controls=0&rel=0&modestbranding=1&playsinline=1&vq=hd1080`;
-      document.getElementById("vidFrame").src = base + code + query;
+      // Shuffle the videos array
+      shuffle(config.videos);
 
       // Config has the video name, code and duration to be played.
       // Loop through the array of videos and play them one after the other waiting for each to finish.
@@ -79,13 +82,14 @@ Notes:
         const duration = video.run_time; // Duration in minutes
 
         const base = "https://www.youtube-nocookie.com/embed/";
-        const query = `?autoplay=1&mute=1}&controls=0&rel=0&modestbranding=1&playsinline=1&vq=hd1080`;
+        const query = `?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1&vq=hd1080`;
         document.getElementById("vidFrame").src = base + code + query;
-        setTimeout(() => {
-          document.getElementById("vidFrame").src = "";
-        }, duration * 60 * 1000);
-      });
-
+        setTimeout(
+          () => {
+            document.getElementById("vidFrame").src = "";
+          },
+          duration * 60 * 1000,
+        );
       });
     </script>
   </body>
